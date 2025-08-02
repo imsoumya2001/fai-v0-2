@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ParticleButton } from "@/components/ui/particle-button"
 import { useToast } from "@/hooks/use-toast"
 import type { GeneratedImage, GeneratedVideo } from "@/app/page"
 
@@ -295,14 +296,14 @@ export function VideoGeneration({ selectedImage, onVideoGenerated, generatedVide
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-medium">Video Prompt</h3>
-            <Button variant="outline" size="sm" onClick={generateVideoPrompt} disabled={isGeneratingPrompt}>
+            <ParticleButton variant="outline" size="sm" onClick={generateVideoPrompt} disabled={isGeneratingPrompt} successDuration={800}>
               {isGeneratingPrompt ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
               )}
               Magic Prompt
-            </Button>
+            </ParticleButton>
           </div>
 
           <Textarea

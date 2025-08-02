@@ -5,6 +5,7 @@ import { Sparkles, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { ParticleButton } from "@/components/ui/particle-button"
 import { useToast } from "@/hooks/use-toast"
 
 interface PromptSectionProps {
@@ -86,11 +87,12 @@ export function PromptSection({
                 onChange={(e) => setPrompt(e.target.value)}
                 className="min-h-[120px] resize-none"
               />
-              <Button
+              <ParticleButton
                 onClick={generatePrompt}
                 disabled={isGenerating}
                 variant="outline"
                 className="w-full bg-transparent"
+                successDuration={800}
               >
                 {isGenerating ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -98,7 +100,7 @@ export function PromptSection({
                   <Sparkles className="mr-2 h-4 w-4" />
                 )}
                 Magic Prompt
-              </Button>
+              </ParticleButton>
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import { ImageGeneration } from "@/components/image-generation"
 import { VideoGeneration } from "@/components/video-generation"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
+import { IntroPage } from "@/components/intro-page"
 
 interface GeneratedImage {
   id: string
@@ -26,6 +27,7 @@ interface GeneratedVideo {
 }
 
 export default function Home() {
+  const [showIntro, setShowIntro] = useState(true)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [imageCount, setImageCount] = useState<1 | 2 | 4>(4)
   const [prompt, setPrompt] = useState("")
@@ -241,11 +243,22 @@ export default function Home() {
     }
   }
 
+  // Handle entering from intro to dashboard
+  const handleEnterDashboard = () => {
+    setShowIntro(false)
+  }
+
+  // Show intro page first
+  if (showIntro) {
+    return <IntroPage onEnter={handleEnterDashboard} />
+  }
+
+  // Show main dashboard
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+              <main className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 lg:py-6 xl:py-8 space-y-4 sm:space-y-6 lg:space-y-8 max-w-7xl">
         <div ref={promptSectionRef}>
           <UploadSection
             uploadedImage={uploadedImage}
