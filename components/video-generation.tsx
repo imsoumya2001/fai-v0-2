@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play, RotateCcw, Sparkles, ChevronDown, ChevronUp } from "lucide-react"
+import { Play, RotateCcw, Sparkles, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
@@ -102,95 +102,107 @@ export function VideoGeneration({
   return (
     <>
       {selectedImageForVideo && (
-        <Card className="mt-6 sm:mt-8">
-                                <CardContent className="p-3 sm:p-4 lg:p-6">
-                                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4 lg:mb-6 text-center sm:text-left">Generate Video</h2>
-            
-            {/* Selected Image Preview */}
-            <div className="flex justify-center mb-4 sm:mb-6">
-              <div className="w-40 sm:w-48 aspect-square overflow-hidden rounded-lg border shadow-sm">
-                <img
-                  src={selectedImageForVideo.url}
-                  alt="Selected furniture"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            {/* Video Tags */}
-                                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-              <TagGroup 
-                selectionMode="multiple" 
-                selectedKeys={selectedVideoTags}
-                onSelectionChange={(keys) => setSelectedVideoTags(Array.from(keys) as string[])}
-                className="space-y-2 sm:space-y-3"
-              >
-                                            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">Style Tags</h3>
-                                            <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
-                                                <TagList className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {visibleVideoTags.map((tag) => (
-                                                        <Tag key={tag} id={tag} className="cursor-pointer text-xs font-medium min-h-[36px] sm:min-h-[32px] px-2.5 sm:px-3 py-1.5 sm:py-1 touch-manipulation transition-all duration-200">
-                      {tag}
-                      </Tag>
-                    ))}
-                  </TagList>
-                  {videoTags.length > 5 && (
-                                                    <Button
-                                  variant="ghost"
-                                  className="h-9 sm:h-8 px-3 sm:px-4 rounded-full text-xs font-medium border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-all duration-200 bg-gray-50/50 hover:bg-gray-100 touch-manipulation"
-                                  onClick={() => setShowAllVideoTags(!showAllVideoTags)}
-                                >
-                      {showAllVideoTags ? (
-                        <>
-                          show less <ChevronUp className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-                        </>
-                      ) : (
-                        <>
-                          show more <ChevronDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-                        </>
-                      )}
-                    </Button>
-                  )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-stretch">
+          {/* Left Side - Image Preview */}
+          <Card className="flex flex-col">
+            <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Selected Image</h2>
+              
+              {/* Image Preview */}
+              <div className="relative flex-1">
+                <div className="group relative h-full min-h-[280px] sm:min-h-[350px] lg:min-h-[400px] overflow-hidden rounded-lg border">
+                  <img
+                    src={selectedImageForVideo.url}
+                    alt="Selected furniture"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
-              </TagGroup>
-              {/* Video Prompt */}
-              <div>
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
-                                                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">Write a prompt for your video</h3>
-                  <ParticleButton
-                    variant="outline"
-                    onClick={handleGenerateVideoPrompt}
-                    disabled={isGeneratingPrompt}
-                                                    className="flex items-center gap-1.5 h-9 sm:h-8 px-3 text-xs font-medium touch-manipulation"
-                    successDuration={800}
-                  >
-                    <Sparkles className="h-4 w-4 sm:h-3 sm:w-3" />
-                    <span className="sm:hidden">{isGeneratingPrompt ? 'Generating...' : 'Magic Prompt'}</span>
-                    <span className="hidden sm:inline">{isGeneratingPrompt ? 'Gen...' : 'Magic'}</span>
-                  </ParticleButton>
-                </div>
-                <Textarea
-                  value={videoPrompt}
-                  onChange={(e) => setVideoPrompt(e.target.value)}
-                  placeholder="Describe the video movement and style you want..."
-                                                className="min-h-[100px] sm:min-h-[120px] lg:min-h-[140px] text-sm resize-none"
-                />
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Generate Button */}
-              <div className="flex justify-center">
-                <RainbowButton
-                  onClick={handleGenerateVideo}
-                  disabled={!videoPrompt.trim()}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base sm:text-lg h-12 sm:h-auto font-medium touch-manipulation"
+          {/* Right Side - Video Parameters */}
+          <Card className="flex flex-col">
+            <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
+              <div className="flex-1 space-y-4 sm:space-y-5 lg:space-y-6">
+                {/* Style Tags */}
+                <TagGroup 
+                  selectionMode="multiple" 
+                  selectedKeys={selectedVideoTags}
+                  onSelectionChange={(keys) => setSelectedVideoTags(Array.from(keys) as string[])}
+                  className="space-y-2 sm:space-y-3"
                 >
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                  Generate Video
-                </RainbowButton>
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900">Style Tags</h3>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+                    <TagList className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {visibleVideoTags.map((tag) => (
+                        <Tag key={tag} id={tag} className="cursor-pointer text-xs font-medium min-h-[36px] sm:min-h-[32px] px-2.5 sm:px-3 py-1.5 sm:py-1 touch-manipulation transition-all duration-200">
+                          {tag}
+                        </Tag>
+                      ))}
+                    </TagList>
+                    {videoTags.length > 5 && (
+                      <Button
+                        variant="ghost"
+                        className="h-9 sm:h-8 px-3 sm:px-4 rounded-full text-xs font-medium border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-all duration-200 bg-gray-50/50 hover:bg-gray-100 touch-manipulation"
+                        onClick={() => setShowAllVideoTags(!showAllVideoTags)}
+                      >
+                        {showAllVideoTags ? (
+                          <>
+                            show less <ChevronUp className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+                          </>
+                        ) : (
+                          <>
+                            show more <ChevronDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </TagGroup>
+
+                {/* Video Prompt */}
+                <div className="flex-1 flex flex-col">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">Write a prompt for your video</h3>
+                  <div className="flex-1 flex flex-col space-y-2 sm:space-y-3">
+                    <div className="relative flex-1">
+                      <Textarea
+                        value={videoPrompt}
+                        onChange={(e) => setVideoPrompt(e.target.value)}
+                        placeholder="Describe the video movement and style you want..."
+                        className="h-full min-h-[100px] sm:min-h-[120px] resize-none pr-2 pb-12 sm:pr-20 sm:pb-2 text-sm"
+                      />
+                      <ParticleButton
+                        variant="default"
+                        size="sm"
+                        onClick={handleGenerateVideoPrompt}
+                        disabled={isGeneratingPrompt}
+                        className="absolute bottom-2 right-2 h-8 sm:h-9 px-2 sm:px-3 text-xs font-medium"
+                        successDuration={800}
+                      >
+                        {isGeneratingPrompt ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-1 h-3 w-3" />
+                        )}
+                        Magic Prompt
+                      </ParticleButton>
+                    </div>
+
+                    <RainbowButton
+                      onClick={handleGenerateVideo}
+                      disabled={!videoPrompt.trim()}
+                      className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium"
+                    >
+                      <Play className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                      Generate Video
+                    </RainbowButton>
+                  </div>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <Card className="mt-8">

@@ -29,7 +29,7 @@ interface GeneratedVideo {
 export default function Home() {
   const [showIntro, setShowIntro] = useState(true)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-  const [imageCount, setImageCount] = useState<1 | 2 | 4>(4)
+  const [imageCount, setImageCount] = useState<1 | 2 | 4>(1)
   const [prompt, setPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])

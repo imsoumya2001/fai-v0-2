@@ -250,7 +250,7 @@ export function UploadSection({
                     ) : (
                       <Sparkles className="mr-1 h-3 w-3" />
                     )}
-                    Magic
+                    Magic Prompt
                   </ParticleButton>
                 </div>
 
