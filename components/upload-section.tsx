@@ -131,7 +131,7 @@ export function UploadSection({
       {/* Left Side - Upload */}
       <Card className="flex flex-col">
         <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Upload Your Furniture Photo</h2>
+          <h2 className="text-lg sm:text-xl font-playfair italic font-light mb-3 sm:mb-4">Upload Your Furniture Photo</h2>
 
           <Input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
 
@@ -209,7 +209,7 @@ export function UploadSection({
             {/* Number of Images - Mobile optimized */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 sm:mb-3">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900">No of images</h3>
+                <h3 className="text-sm sm:text-base font-poppins font-medium text-gray-900">No of images</h3>
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   {[1, 2, 4].map((count) => (
                     <Button
@@ -228,7 +228,7 @@ export function UploadSection({
 
             {/* Prompt Section - Mobile optimized */}
             <div className="flex-1 flex flex-col">
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">Write your prompt</h3>
+              <h3 className="text-sm sm:text-base font-poppins font-medium text-gray-900 mb-2 sm:mb-3">Write your prompt</h3>
               <div className="flex-1 flex flex-col space-y-2 sm:space-y-3">
                 <div className="relative flex-1">
                   <Textarea

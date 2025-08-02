@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play, RotateCcw, Sparkles, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
+import { Play, RotateCcw, X, Download, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { TagGroup, TagList, Tag } from "@/components/ui/tag-group"
 import { RainbowButton } from "@/components/ui/rainbow-button"
 import { ParticleButton } from "@/components/ui/particle-button"
+import { Loader2 } from "lucide-react"
 
 interface GeneratedImage {
   id: string
@@ -44,8 +45,10 @@ export function VideoGeneration({
   const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([])
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
   const [showAllVideoTags, setShowAllVideoTags] = useState(false)
+  const [previewVideo, setPreviewVideo] = useState<GeneratedVideo | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
-  const recentVideos = generatedVideos.slice(0, 6)
+  const recentVideos = generatedVideos.slice(0, 8)
   const totalVideos = generatedVideos.length
 
   // Video tags for video generation
@@ -99,6 +102,47 @@ export function VideoGeneration({
     }
   }
 
+  const handleVideoClick = (video: GeneratedVideo) => {
+    if (video.status === "completed") {
+      setPreviewVideo(video)
+      setPreviewOpen(true)
+    }
+  }
+
+  const handleDownload = () => {
+    if (previewVideo && previewVideo.url) {
+      const link = document.createElement('a')
+      link.href = previewVideo.url
+      link.download = `furniture-video-${previewVideo.id}.mp4`
+      link.click()
+    }
+  }
+
+  const handleShare = async () => {
+    if (!previewVideo) return
+
+    if (navigator.share) {
+      // Mobile share
+      try {
+        await navigator.share({
+          title: 'FurnitureAI Generated Video',
+          text: previewVideo.prompt,
+          url: previewVideo.url
+        })
+      } catch (error) {
+        console.log('Share cancelled')
+      }
+    } else {
+      // Desktop - copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(previewVideo.url)
+        alert('Video link copied to clipboard!')
+      } catch (error) {
+        console.error('Failed to copy link')
+      }
+    }
+  }
+
   return (
     <>
       {selectedImageForVideo && (
@@ -106,7 +150,7 @@ export function VideoGeneration({
           {/* Left Side - Image Preview */}
           <Card className="flex flex-col">
             <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
-              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Selected Image</h2>
+              <h2 className="text-lg sm:text-xl font-playfair italic font-light mb-3 sm:mb-4">Selected Image</h2>
               
               {/* Image Preview */}
               <div className="relative flex-1">
@@ -132,7 +176,7 @@ export function VideoGeneration({
                   onSelectionChange={(keys) => setSelectedVideoTags(Array.from(keys) as string[])}
                   className="space-y-2 sm:space-y-3"
                 >
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900">Style Tags</h3>
+                  <h3 className="text-sm sm:text-base font-poppins font-medium text-gray-900">Style Tags</h3>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
                     <TagList className="flex flex-wrap gap-1.5 sm:gap-2">
                       {visibleVideoTags.map((tag) => (
@@ -147,15 +191,7 @@ export function VideoGeneration({
                         className="h-9 sm:h-8 px-3 sm:px-4 rounded-full text-xs font-medium border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-all duration-200 bg-gray-50/50 hover:bg-gray-100 touch-manipulation"
                         onClick={() => setShowAllVideoTags(!showAllVideoTags)}
                       >
-                        {showAllVideoTags ? (
-                          <>
-                            show less <ChevronUp className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-                          </>
-                        ) : (
-                          <>
-                            show more <ChevronDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-                          </>
-                        )}
+                        {showAllVideoTags ? "show less" : "show more"}
                       </Button>
                     )}
                   </div>
@@ -163,7 +199,7 @@ export function VideoGeneration({
 
                 {/* Video Prompt */}
                 <div className="flex-1 flex flex-col">
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">Write a prompt for your video</h3>
+                  <h3 className="text-sm sm:text-base font-poppins font-medium text-gray-900 mb-2 sm:mb-3">Write a prompt for your video</h3>
                   <div className="flex-1 flex flex-col space-y-2 sm:space-y-3">
                     <div className="relative flex-1">
                       <Textarea
@@ -183,7 +219,7 @@ export function VideoGeneration({
                         {isGeneratingPrompt ? (
                           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                         ) : (
-                          <Sparkles className="mr-1 h-3 w-3" />
+                          <Play className="mr-1 h-3 w-3" />
                         )}
                         Magic Prompt
                       </ParticleButton>
@@ -208,8 +244,8 @@ export function VideoGeneration({
       <Card className="mt-8">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Generated Videos</h2>
-            {totalVideos > 6 && (
+            <h2 className="text-2xl font-playfair italic font-light">Generated Videos</h2>
+            {totalVideos > 8 && (
               <Dialog open={viewAllOpen} onOpenChange={setViewAllOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">View All ({totalVideos})</Button>
@@ -218,7 +254,7 @@ export function VideoGeneration({
                   <ScrollArea className="h-full">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4">
                       {generatedVideos.map((video) => (
-                        <div key={video.id} className="group relative">
+                        <div key={video.id} className="group space-y-3">
                           <div className="aspect-video overflow-hidden rounded-lg border bg-gray-100">
                             {video.status === "completed" && video.url ? (
                               <video
@@ -236,7 +272,7 @@ export function VideoGeneration({
                               </div>
                             )}
                           </div>
-                          <div className="flex justify-between items-center mt-2">
+                          <div className="flex justify-between items-center">
                             <span className="text-xs text-gray-500 truncate flex-1">
                               {video.prompt.slice(0, 30)}...
                             </span>
@@ -267,7 +303,10 @@ export function VideoGeneration({
               <div className="flex gap-4 pb-4">
                 {recentVideos.map((video) => (
                   <div key={video.id} className="group relative flex-shrink-0">
-                    <div className="w-64 aspect-video overflow-hidden rounded-lg border bg-gray-100">
+                    <div 
+                      className="w-64 aspect-video overflow-hidden rounded-lg border bg-gray-100 cursor-pointer"
+                      onClick={() => handleVideoClick(video)}
+                    >
                       {video.status === "completed" && video.url ? (
                         <video
                           src={video.url}
@@ -292,7 +331,7 @@ export function VideoGeneration({
                         variant="outline"
                         size="sm"
                         onClick={() => onRecreateVideo(video)}
-                        className="ml-2"
+                        className="h-8 w-8 p-0"
                       >
                         <RotateCcw className="h-4 w-4" />
                       </Button>
@@ -304,6 +343,70 @@ export function VideoGeneration({
           )}
         </CardContent>
       </Card>
+
+      {/* Glassmorphic Video Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-transparent border-0 shadow-none">
+          {previewVideo && (
+            <div className="relative w-full h-full">
+              {/* Blurred Background */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-30"
+                style={{
+                  backgroundImage: `url(${previewVideo.url || "/placeholder.svg"})`
+                }}
+              />
+              
+              {/* Main Content */}
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6">
+                  <div className="backdrop-blur-md bg-white/20 rounded-2xl px-6 py-3 border border-white/30">
+                    <h3 className="text-xl font-poppins font-medium text-white drop-shadow-lg">Video Preview</h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPreviewOpen(false)}
+                    className="h-12 w-12 p-0 backdrop-blur-md bg-white/20 rounded-full border border-white/30 hover:bg-white/30 text-white"
+                  >
+                    <X className="h-6 w-6" />
+                  </Button>
+                </div>
+
+                {/* Video Content */}
+                <div className="flex-1 flex items-center justify-center px-6 pb-6">
+                  <div className="backdrop-blur-md bg-white/10 rounded-3xl p-8 border border-white/30 shadow-2xl">
+                    <video
+                      src={previewVideo.url}
+                      controls
+                      className="max-w-full max-h-[60vh] object-contain rounded-2xl shadow-lg"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-4 pb-6">
+                  <Button 
+                    onClick={handleDownload} 
+                    className="backdrop-blur-md bg-white/20 hover:bg-white/30 border border-white/30 text-white font-medium px-6 py-3"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button 
+                    onClick={handleShare}
+                    className="backdrop-blur-md bg-white/20 hover:bg-white/30 border border-white/30 text-white font-medium px-6 py-3"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

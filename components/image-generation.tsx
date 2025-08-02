@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { RotateCcw, Play, X, Download, ZoomIn, ZoomOut, Sparkles } from "lucide-react"
+import { RotateCcw, Play, X, Download, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Slider } from "@/components/ui/slider"
-import { Textarea } from "@/components/ui/textarea"
+import { FaImage, FaVideo, FaRedo } from "react-icons/fa"
 
 interface GeneratedImage {
   id: string
@@ -28,23 +27,13 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
   const [viewAllOpen, setViewAllOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState<GeneratedImage | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [zoom, setZoom] = useState([100])
-  const [brightness, setBrightness] = useState([100])
-  const [contrast, setContrast] = useState([100])
 
-
-  const recentImages = generatedImages.slice(0, 10)
+  const recentImages = generatedImages.slice(0, 8)
   const totalImages = generatedImages.length
-
-
 
   const handleImageClick = (image: GeneratedImage) => {
     setPreviewImage(image)
     setPreviewOpen(true)
-    // Reset sliders
-    setZoom([100])
-    setBrightness([100])
-    setContrast([100])
   }
 
   const handleDownload = () => {
@@ -53,6 +42,32 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
       link.href = previewImage.url
       link.download = `furniture-${previewImage.id}.jpg`
       link.click()
+    }
+  }
+
+  const handleShare = async () => {
+    if (!previewImage) return
+
+    if (navigator.share) {
+      // Mobile share
+      try {
+        await navigator.share({
+          title: 'FurnitureAI Generated Image',
+          text: previewImage.prompt,
+          url: previewImage.url
+        })
+      } catch (error) {
+        console.log('Share cancelled')
+      }
+    } else {
+      // Desktop - copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(previewImage.url)
+        // You could add a toast notification here
+        alert('Image link copied to clipboard!')
+      } catch (error) {
+        console.error('Failed to copy link')
+      }
     }
   }
 
@@ -73,57 +88,57 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
       <Card className="mt-8">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Generated Images</h2>
-            {totalImages > 10 && (
+            <h2 className="text-2xl font-playfair italic font-light">Generated Images</h2>
+            {totalImages > 8 && (
               <Dialog open={viewAllOpen} onOpenChange={setViewAllOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline">View All ({totalImages})</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[80vh]">
                   <ScrollArea className="h-full">
-                                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                    {generatedImages.map((image) => (
-                      <div key={image.id} className="group space-y-3">
-                        {/* Image */}
-                        <div 
-                          className="aspect-square overflow-hidden rounded-lg border cursor-pointer"
-                          onClick={() => handleImageClick(image)}
-                        >
-                          <img
-                            src={image.url || "/placeholder.svg"}
-                            alt="Generated furniture"
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="flex gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleRetry(image)
-                            }}
-                            className="flex-1 flex items-center gap-1 text-xs px-2"
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                      {generatedImages.map((image) => (
+                        <div key={image.id} className="group space-y-3">
+                          {/* Image */}
+                          <div 
+                            className="aspect-square overflow-hidden rounded-lg border cursor-pointer"
+                            onClick={() => handleImageClick(image)}
                           >
-                            <RotateCcw className="h-3 w-3" />
-                            Retry
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleOpenVideoGeneration(image)
-                            }}
-                            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white flex items-center gap-1 text-xs px-2"
-                          >
-                            <Play className="h-3 w-3" />
-                            Video
-                          </Button>
+                            <img
+                              src={image.url || "/placeholder.svg"}
+                              alt="Generated furniture"
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                          </div>
+                          
+                          {/* Action Buttons */}
+                          <div className="flex gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleRetry(image)
+                              }}
+                              className="flex-1 flex items-center gap-1 text-xs px-2"
+                            >
+                              <FaRedo className="h-3 w-3" />
+                              Retry
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleOpenVideoGeneration(image)
+                              }}
+                              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white flex items-center gap-1 text-xs px-2"
+                            >
+                              <FaVideo className="h-3 w-3" />
+                              Video
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                     </div>
                   </ScrollArea>
                 </DialogContent>
@@ -139,38 +154,36 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
             <ScrollArea className="w-full">
               <div className="flex gap-4 pb-4">
                 {recentImages.map((image) => (
-                  <div key={image.id} className="group flex-shrink-0">
-                    <div className="w-64 space-y-3">
-                      {/* Image */}
-                      <div 
-                        className="aspect-square overflow-hidden rounded-lg border cursor-pointer"
-                        onClick={() => handleImageClick(image)}
-                      >
-                        <img
-                          src={image.url || "/placeholder.svg"}
-                          alt="Generated furniture"
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                        />
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
+                  <div key={image.id} className="group relative flex-shrink-0">
+                    <div 
+                      className="w-64 aspect-square overflow-hidden rounded-lg border cursor-pointer"
+                      onClick={() => handleImageClick(image)}
+                    >
+                      <img
+                        src={image.url || "/placeholder.svg"}
+                        alt="Generated furniture"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-sm text-gray-600 truncate flex-1">
+                        {image.prompt.slice(0, 40)}...
+                      </span>
+                      <div className="flex gap-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleRetry(image)}
-                          className="flex-1 flex items-center gap-2"
+                          className="h-8 w-8 p-0"
                         >
-                          <RotateCcw className="h-4 w-4" />
-                          Retry
+                          <FaRedo className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           onClick={() => handleOpenVideoGeneration(image)}
-                          className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white flex items-center gap-2"
+                          className="h-8 w-8 p-0 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
                         >
-                          <Play className="h-4 w-4" />
-                          Video
+                          <FaVideo className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -184,7 +197,7 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
 
       {/* Glassmorphic Image Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] p-0 bg-transparent border-0 shadow-none">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-transparent border-0 shadow-none">
           {previewImage && (
             <div className="relative w-full h-full">
               {/* Blurred Background */}
@@ -200,7 +213,7 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
                 {/* Header */}
                 <div className="flex items-center justify-between p-6">
                   <div className="backdrop-blur-md bg-white/20 rounded-2xl px-6 py-3 border border-white/30">
-                    <h3 className="text-xl font-semibold text-white drop-shadow-lg">Image Preview</h3>
+                    <h3 className="text-xl font-poppins font-medium text-white drop-shadow-lg">Image Preview</h3>
                   </div>
                   <Button
                     variant="ghost"
@@ -212,106 +225,39 @@ export function ImageGeneration({ generatedImages = [], onRecreate, onTurnIntoVi
                   </Button>
                 </div>
 
-                {/* Content */}
+                {/* Image Content */}
                 <div className="flex-1 flex items-center justify-center px-6 pb-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full h-full max-h-[70vh]">
-                    {/* Image */}
-                    <div className="lg:col-span-3 flex items-center justify-center">
-                      <div className="relative backdrop-blur-md bg-white/10 rounded-3xl p-6 border border-white/30 shadow-2xl">
-                        <img
-                          src={previewImage.url || "/placeholder.svg"}
-                          alt="Preview"
-                          className="max-w-full max-h-[60vh] object-contain rounded-2xl shadow-lg"
-                          style={{
-                            transform: `scale(${zoom[0] / 100})`,
-                            filter: `brightness(${brightness[0]}%) contrast(${contrast[0]}%)`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Controls */}
-                    <div className="backdrop-blur-md bg-white/20 rounded-3xl p-6 border border-white/30 space-y-6">
-                      <div>
-                        <label className="text-sm font-medium mb-3 block text-white drop-shadow flex items-center gap-2">
-                          <ZoomIn className="h-4 w-4" />
-                          Zoom: {zoom[0]}%
-                        </label>
-                        <Slider
-                          value={zoom}
-                          onValueChange={setZoom}
-                          min={50}
-                          max={200}
-                          step={10}
-                          className="w-full"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium mb-3 block text-white drop-shadow">Brightness: {brightness[0]}%</label>
-                        <Slider
-                          value={brightness}
-                          onValueChange={setBrightness}
-                          min={0}
-                          max={200}
-                          step={10}
-                          className="w-full"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium mb-3 block text-white drop-shadow">Contrast: {contrast[0]}%</label>
-                        <Slider
-                          value={contrast}
-                          onValueChange={setContrast}
-                          min={0}
-                          max={200}
-                          step={10}
-                          className="w-full"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-3 pt-4">
-                        <Button 
-                          onClick={handleDownload} 
-                          className="w-full backdrop-blur-md bg-white/20 hover:bg-white/30 border border-white/30 text-white font-medium"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            onRecreate(previewImage)
-                            setPreviewOpen(false)
-                          }}
-                          className="w-full backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/30 text-white font-medium"
-                        >
-                          <RotateCcw className="w-4 h-4 mr-2" />
-                          Regenerate
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => {
-                            onTurnIntoVideo(previewImage)
-                            setPreviewOpen(false)
-                          }}
-                          className="w-full backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/30 text-white font-medium"
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          Turn into Video
-                        </Button>
-                      </div>
-                    </div>
+                  <div className="backdrop-blur-md bg-white/10 rounded-3xl p-8 border border-white/30 shadow-2xl">
+                    <img
+                      src={previewImage.url || "/placeholder.svg"}
+                      alt="Preview"
+                      className="max-w-full max-h-[60vh] object-contain rounded-2xl shadow-lg"
+                    />
                   </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-4 pb-6">
+                  <Button 
+                    onClick={handleDownload} 
+                    className="backdrop-blur-md bg-white/20 hover:bg-white/30 border border-white/30 text-white font-medium px-6 py-3"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button 
+                    onClick={handleShare}
+                    className="backdrop-blur-md bg-white/20 hover:bg-white/30 border border-white/30 text-white font-medium px-6 py-3"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
                 </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-
-
     </>
   )
 }
