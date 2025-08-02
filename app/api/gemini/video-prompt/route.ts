@@ -2,20 +2,20 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { imageUrl, styles, originalPrompt } = await request.json()
+    const { image, tags, originalPrompt } = await request.json()
 
-    if (!imageUrl) {
+    if (!image) {
       return NextResponse.json({ error: "Image URL is required" }, { status: 400 })
     }
 
-    const styleText = styles.length > 0 ? styles.join(", ") : "cinematic movement"
+    const tagsText = tags && tags.length > 0 ? tags.join(", ") : "cinematic movement"
 
     const requestBody = {
       contents: [
         {
           parts: [
             {
-              text: `Create a cinematic video prompt for this furniture image. The original enhancement was: "${originalPrompt}". Include these video styles: ${styleText}. Create a 2-3 sentence prompt focusing on camera movement and cinematic quality for furniture showcase video. Keep it concise and professional.`,
+              text: `Create a cinematic video prompt for this furniture image. The original enhancement was: "${originalPrompt}". Include these camera movements: ${tagsText}. Create a 3-4 sentence prompt focusing on camera movement and cinematic quality for furniture showcase video. Keep it concise and professional.`,
             },
           ],
         },

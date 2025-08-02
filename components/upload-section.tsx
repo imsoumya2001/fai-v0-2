@@ -174,11 +174,20 @@ export function UploadSection({
                 </div>
               </div>
               {fileName && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="truncate">{fileName}</span>
-                  <button onClick={handleRemove} className="ml-auto rounded-full p-1 hover:bg-muted">
-                    <X className="h-4 w-4" />
-                  </button>
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-sm font-medium text-gray-700 truncate">{fileName}</span>
+                    </div>
+                    <button 
+                      onClick={handleRemove} 
+                      className="ml-2 flex-shrink-0 rounded-full p-1.5 hover:bg-gray-200 transition-colors"
+                      title="Remove image"
+                    >
+                      <X className="h-4 w-4 text-gray-500" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

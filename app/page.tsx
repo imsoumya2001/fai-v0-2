@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Header } from "@/components/header"
 import { UploadSection } from "@/components/upload-section"
 import { ImageGeneration } from "@/components/image-generation"
@@ -32,7 +32,11 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
   const [generatedVideos, setGeneratedVideos] = useState<GeneratedVideo[]>([])
+  const [selectedImageForVideo, setSelectedImageForVideo] = useState<GeneratedImage | null>(null)
   const { toast } = useToast()
+  
+  // Ref for scrolling to prompt section
+  const promptSectionRef = useRef<HTMLDivElement>(null)
 
   const handleGenerateImage = async () => {
     if (!uploadedImage || !prompt.trim()) {
@@ -117,7 +121,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          image: image.url,
+          imageUrl: image.url,
           prompt: image.prompt,
         }),
       })
@@ -131,7 +135,7 @@ export default function Home() {
       // Update video with completed status
       setGeneratedVideos((prev) =>
         prev.map((video) =>
-          video.id === videoId ? { ...video, url: data.videoUrl, status: "completed" as const } : video,
+          video.id === videoId ? { ...video, url: data.video?.url || data.videoUrl, status: "completed" as const } : video,
         ),
       )
 
@@ -161,29 +165,114 @@ export default function Home() {
     }
   }
 
+  const handleScrollToPrompt = () => {
+    if (promptSectionRef.current) {
+      promptSectionRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }
+
+  const handleShowVideoGeneration = (image: GeneratedImage) => {
+    setSelectedImageForVideo(image)
+  }
+
+  const handleGenerateVideoWithPrompt = async (image: GeneratedImage, videoPrompt: string) => {
+    const videoId = `video-${Date.now()}`
+    
+    // Add video to the list with generating status
+    const newVideo: GeneratedVideo = {
+      id: videoId,
+      url: "",
+      thumbnail: image.url,
+      prompt: videoPrompt,
+      timestamp: new Date(),
+      status: "generating" as const,
+    }
+    
+    setGeneratedVideos((prev) => [newVideo, ...prev])
+    setSelectedImageForVideo(null) // Hide the video generation section
+    
+    try {
+      const response = await fetch("/api/fal/video", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageUrl: image.url,
+          prompt: videoPrompt,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Video generation failed")
+      }
+
+      const data = await response.json()
+
+      // Update video with completed status
+      setGeneratedVideos((prev) =>
+        prev.map((video) =>
+          video.id === videoId ? { ...video, url: data.video?.url || data.videoUrl, status: "completed" as const } : video,
+        ),
+      )
+
+      toast({
+        title: "Video generated!",
+        description: "Your furniture video has been created successfully.",
+      })
+    } catch (error) {
+      console.error("Video generation error:", error)
+      
+      // Update video with failed status
+      setGeneratedVideos((prev) =>
+        prev.map((video) =>
+          video.id === videoId ? { ...video, status: "failed" as const } : video,
+        ),
+      )
+
+      toast({
+        title: "Video generation failed",
+        description: "Please try again or contact support if the problem persists.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
       <main className="container mx-auto px-4 py-8 space-y-8">
-        <UploadSection
-          uploadedImage={uploadedImage}
-          setUploadedImage={setUploadedImage}
-          imageCount={imageCount}
-          setImageCount={setImageCount}
-          prompt={prompt}
-          setPrompt={setPrompt}
-          onGenerateImage={handleGenerateImage}
-          isGenerating={isGenerating}
-        />
+        <div ref={promptSectionRef}>
+          <UploadSection
+            uploadedImage={uploadedImage}
+            setUploadedImage={setUploadedImage}
+            imageCount={imageCount}
+            setImageCount={setImageCount}
+            prompt={prompt}
+            setPrompt={setPrompt}
+            onGenerateImage={handleGenerateImage}
+            isGenerating={isGenerating}
+          />
+        </div>
 
         <ImageGeneration
           generatedImages={generatedImages}
           onRecreate={handleRecreateImage}
           onTurnIntoVideo={handleTurnIntoVideo}
+          onScrollToPrompt={handleScrollToPrompt}
+          onShowVideoGeneration={handleShowVideoGeneration}
         />
 
-        <VideoGeneration generatedVideos={generatedVideos} onRecreate={handleRecreateVideo} />
+        <VideoGeneration 
+          generatedVideos={generatedVideos} 
+          onRecreateVideo={handleRecreateVideo}
+          selectedImageForVideo={selectedImageForVideo}
+          onGenerateVideo={handleGenerateVideoWithPrompt}
+        />
       </main>
 
       <Toaster />

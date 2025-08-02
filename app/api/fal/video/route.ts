@@ -19,14 +19,17 @@ export async function POST(request: NextRequest) {
 
     console.log("Sending request to Fal.ai:", requestBody)
 
-    // Use the synchronous endpoint instead of queue for simpler handling
-    const response = await fetch("https://fal.run/fal-ai/wan/v2.2-a14b/image-to-video/turbo", {
+    // Use the queue endpoint for better reliability
+    const response = await fetch("https://queue.fal.run/fal-ai/wan/v2.2-a14b/image-to-video/turbo", {
       method: "POST",
       headers: {
         Authorization: `Key ${process.env.FAL_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        input: requestBody,
+        webhook_url: null,
+      }),
     })
 
     if (!response.ok) {
@@ -42,22 +45,66 @@ export async function POST(request: NextRequest) {
         throw new Error("Fal.ai service temporarily unavailable - please try again")
       }
 
-      throw new Error(`API request failed with status ${response.status}`)
+      throw new Error(`API request failed with status ${response.status}: ${errorText}`)
     }
 
-    const data = await response.json()
-    console.log("Fal.ai response:", data)
+    const queueData = await response.json()
+    console.log("Fal.ai queue response:", queueData)
 
-    // Handle the response
-    if (data.video?.url) {
-      return NextResponse.json({ video: data.video })
-    } else if (data.request_id) {
-      // If it returns a request ID, we'll need to poll
-      return NextResponse.json({ requestId: data.request_id })
-    } else {
-      console.error("Unexpected Fal.ai response format:", data)
-      throw new Error("Unexpected response format from Fal.ai")
+    // Get the request ID and poll for results
+    const requestId = queueData.request_id
+    if (!requestId) {
+      throw new Error("No request ID received from Fal.ai")
     }
+
+    // Poll for the result
+    let attempts = 0
+    const maxAttempts = 60 // Maximum 10 minutes (60 * 10 seconds)
+    
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 10000)) // Wait 10 seconds
+      
+      const statusResponse = await fetch(`https://queue.fal.run/fal-ai/wan/v2.2-a14b/image-to-video/turbo/requests/${requestId}/status`, {
+        headers: {
+          Authorization: `Key ${process.env.FAL_API_KEY}`,
+        },
+      })
+
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json()
+        console.log("Status check:", statusData)
+
+        if (statusData.status === "COMPLETED") {
+          // Get the final result
+          const resultResponse = await fetch(`https://queue.fal.run/fal-ai/wan/v2.2-a14b/image-to-video/turbo/requests/${requestId}`, {
+            headers: {
+              Authorization: `Key ${process.env.FAL_API_KEY}`,
+            },
+          })
+
+          if (resultResponse.ok) {
+            const resultData = await resultResponse.json()
+            console.log("Fal.ai final result:", resultData)
+            
+            if (resultData.video?.url) {
+              return NextResponse.json({ video: resultData.video })
+            } else {
+              throw new Error("No video URL in response")
+            }
+          }
+        } else if (statusData.status === "FAILED") {
+          throw new Error(`Video generation failed: ${statusData.error || "Unknown error"}`)
+        }
+        // If status is IN_PROGRESS or IN_QUEUE, continue polling
+        console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status is ${statusData.status}`)
+      } else {
+        console.log(`Attempt ${attempts + 1}/${maxAttempts}: Status check failed`)
+      }
+      
+      attempts++
+    }
+
+    throw new Error("Video generation timed out")
   } catch (error) {
     console.error("Fal.ai API error:", error)
     return NextResponse.json(
